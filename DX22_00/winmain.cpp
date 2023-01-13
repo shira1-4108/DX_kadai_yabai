@@ -35,6 +35,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void Game_Init();
 void Game_Draw();
 void Game_Update();
+
+void titleUpdate();
+void titleDraw();
+void gameUpdate();
+void gameDraw();
+void resultUpdate();
+void resultDraw();
+
 void Game_Release();
 
 
@@ -91,6 +99,14 @@ Camera* gpCamera;
 // デルタタイム用の変数
 DWORD gDeltaTime;
 
+//シーン切り替え用
+enum eScene {
+	Title,
+	Game,
+	Result,
+};
+
+int sceneNum = eScene::Game;
 
 void vector_DrawAll(GameObjectVector vec)
 {
@@ -530,17 +546,22 @@ void Game_Draw()
 
 	// ↓　自前の描画処理をここに書く *******
 
-	// ゲームオブジェクトを描画
-	d3d->context->OMSetBlendState(d3d->blendAlpha, NULL, 0xffffffff);// アルファブレンド
+	switch (sceneNum)
+	{
+	case eScene::Title:
+		titleDraw();
+		break;
 
-	vector_DrawAll(gObjectList);
-	vector_DrawAll(gMonsterObjectList);
+	case eScene::Game:
+		gameDraw();
+		break;
 
-	d3d->context->OMSetBlendState(d3d->blendAdd, NULL, 0xffffffff);// 加算合成
-	// 弾管理配列の中身を全てDrawする
-	vector_DrawAll(gShotManager);
-
-	vector_DrawAll(gEffectManager);
+	case eScene::Result:
+		resultDraw();
+		break;
+	default:
+		break;
+	}
 
 	// ダブルバッファの切り替え
 	d3d->swapChain->Present(0, 0);
@@ -558,6 +579,34 @@ void Game_Update()
 		gDeltaTime = 1;
 	}
 
+	switch (sceneNum)
+	{
+	case eScene::Title:
+
+		break;
+
+	case eScene::Game:
+		gameUpdate();
+		break;
+
+	case eScene::Result:
+		break;
+	default:
+		break;
+	}
+
+}
+
+void titleUpdate()
+{
+}
+
+void titleDraw()
+{
+}
+
+void gameUpdate()
+{
 	// カメラ移動変数
 	static float angle = 0.0f; // 回転角度
 	static float zoom = 3.0f;  // ズーム
@@ -722,7 +771,7 @@ void Game_Update()
 				}
 			}
 
-			
+
 			for (auto hoge : tes) {
 				for (auto a = gMonsterObjectList.begin(); a != gMonsterObjectList.end(); ) {
 					if (*a == hoge) {
@@ -758,6 +807,32 @@ void Game_Update()
 
 	// カメラ更新（ビュー変換行列計算）
 	gpCamera->Update();
+}
+
+void gameDraw()
+{
+	// DIRECT3D構造体にアクセスする
+	DIRECT3D* d3d = Direct3D_Get();
+
+	// ゲームオブジェクトを描画
+	d3d->context->OMSetBlendState(d3d->blendAlpha, NULL, 0xffffffff);// アルファブレンド
+
+	vector_DrawAll(gObjectList);
+	vector_DrawAll(gMonsterObjectList);
+
+	d3d->context->OMSetBlendState(d3d->blendAdd, NULL, 0xffffffff);// 加算合成
+	// 弾管理配列の中身を全てDrawする
+	vector_DrawAll(gShotManager);
+
+	vector_DrawAll(gEffectManager);
+}
+
+void resultUpdate()
+{
+}
+
+void resultDraw()
+{
 }
 
 void Game_Release()
