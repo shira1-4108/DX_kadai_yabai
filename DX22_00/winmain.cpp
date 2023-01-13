@@ -72,9 +72,13 @@ GameObject* gpShot;
 GameObject* gp2DChar[MAX_CHAR];
 GameObject* gpShadow;
 
+//タイトル画像用
+GameObject* gpTitle;
+
 typedef std::vector<GameObject*> GameObjectVector;
 
 GameObjectVector gObjectList;
+GameObjectVector gObjectListTitle;
 GameObjectVector gMonsterObjectList;
 
 #define MAX_GROUND  10
@@ -106,7 +110,7 @@ enum eScene {
 	Result,
 };
 
-int sceneNum = eScene::Game;
+int sceneNum = eScene::Title;
 
 void vector_DrawAll(GameObjectVector vec)
 {
@@ -384,6 +388,7 @@ void Game_Init()
 	gModelManager["gun"] = loader.Load(
 		"assets/gun.obj", L"assets/gun.png");
 
+
 	// 銃用Modelオブジェクト生成
 	gpGun = new NormalObject();
 	Model* pGunModel = gpGun->GetModel();
@@ -489,18 +494,6 @@ void Game_Init()
 	gMonsterObjectList.emplace_back(gp2DChar[2]);
 	gObjectList.emplace_back(gpGun);
 
-	// コテージ用オブジェクト生成
-	for (int i = 0; i < 5; i++)
-	{
-		gpCottage = new NormalObject();
-		Model* pCottageModel = gpCottage->GetModel();
-		pCottageModel->SetModelData(gModelManager["cottage"]); // 3Dデータをセットする
-		pCottageModel->SetScale(0.002f);
-		pCottageModel->mPos.x = -30.0f + i * 6.5f;
-		pCottageModel->mPos.z = 5.0f;
-		pCottageModel->mPos.y = 0.0f;
-		//gObjectList.emplace_back(gpCottage);
-	}
 
 	//エフェクト
 	gModelManager["explosion"] = CreateSquarePolygon(1.0f, 1.0f, 0.25f, 0.25f, L"assets/explosion.png");
@@ -516,12 +509,13 @@ void Game_Init()
 	pModel->SetModelData(gModelManager["title"]);
 	pModel->Set2dRender(true);
 	pModel->SetDiffuse(XMFLOAT4(1, 1, 1, 0.5f));
-	//pModel->mPos.y = 3.0f;
-	//gObjectList.emplace_back(tmp);
+	pModel->mPos.y = 0.0f;
+	pModel->mPos.z = -5.0f;
+	gObjectListTitle.emplace_back(tmp);
 
 	// カメラの追従ターゲットを指定
 	//((BackCamera*)gpCamera)->SetTarget(gpGun);  // Cスタイルキャスト
-	dynamic_cast<BackCamera*>(gpCamera)->SetTarget(gpGun); // C++キャスト
+	dynamic_cast<BackCamera*>(gpCamera)->SetTarget(gpTitle); // C++キャスト
 }
 
 
@@ -582,7 +576,7 @@ void Game_Update()
 	switch (sceneNum)
 	{
 	case eScene::Title:
-
+		titleUpdate();
 		break;
 
 	case eScene::Game:
@@ -590,6 +584,7 @@ void Game_Update()
 		break;
 
 	case eScene::Result:
+		resultUpdate();
 		break;
 	default:
 		break;
@@ -599,10 +594,20 @@ void Game_Update()
 
 void titleUpdate()
 {
+
+
+	vector_UpdateAll(gObjectListTitle);
+
+
+	if (Input_GetKeyTrigger(VK_SPACE)) {
+		dynamic_cast<BackCamera*>(gpCamera)->SetTarget(gpGun); // C++キャスト
+		sceneNum = eScene::Game;
+	}
 }
 
 void titleDraw()
 {
+	vector_DrawAll(gObjectListTitle);
 }
 
 void gameUpdate()
@@ -631,16 +636,18 @@ void gameUpdate()
 	// カメラ位置X　＝　sinf(角度ラジアン)
 	// カメラ位置Z　＝　cosf(角度ラジアン)
 	// 原点を中心に半径1.0fの円周上の点を求める
-	Model* pCottageModel = gpCottage->GetModel();
+
+	Model* pGunModel = gpGun->GetModel();
+	//Model* pCottageModel = gpCottage->GetModel();
 	float radian = XMConvertToRadians(angle);
 	gpCamera->mEye.x =
-		sinf(radian) * zoom + pCottageModel->mPos.x;
+		sinf(radian) * zoom + pGunModel->mPos.x;
 	gpCamera->mEye.z =
-		cosf(radian) * zoom + pCottageModel->mPos.z;
+		cosf(radian) * zoom + pGunModel->mPos.z;
 	gpCamera->mEye.y = 2.0f;
 
 	// カメラ注視点をコテージの位置にする
-	gpCamera->SetFocus(pCottageModel->mPos);
+	gpCamera->SetFocus(pGunModel->mPos);
 
 	// キャラクター移動
 	// キャラクターが向いている方向に前進する
@@ -657,7 +664,6 @@ void gameUpdate()
 	if (Input_GetKeyDown('S'))
 		gpGun->mSpeed = -speed * gDeltaTime;
 
-	Model* pGunModel = gpGun->GetModel();
 
 	float rotSpeed = 0.09f;
 	// 銃の方向転換
@@ -789,6 +795,9 @@ void gameUpdate()
 		}
 
 	}
+	else if(gMonsterObjectList.size() == 0){
+		sceneNum = eScene::Result;
+	}
 
 	vector_UpdateAll(gEffectManager);
 
@@ -807,6 +816,7 @@ void gameUpdate()
 
 	// カメラ更新（ビュー変換行列計算）
 	gpCamera->Update();
+
 }
 
 void gameDraw()
@@ -829,6 +839,10 @@ void gameDraw()
 
 void resultUpdate()
 {
+
+	if (Input_GetKeyTrigger(VK_SPACE)) {
+		sceneNum = eScene::Title;
+	}
 }
 
 void resultDraw()
