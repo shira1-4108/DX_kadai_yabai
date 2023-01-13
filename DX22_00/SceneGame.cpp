@@ -16,8 +16,6 @@ void SceneGame::Init()
 {
 	// ƒ‚ƒfƒ‹“Ç‚Ýž‚Ý
 	ObjModelLoader loader;
-	gModelManager["cottage"] = loader.Load(
-		"assets/cottage.obj", L"assets/cottage.png");
 
 	// eƒ‚ƒfƒ‹“Ç‚Ýž‚Ý
 	loader = ObjModelLoader();
@@ -30,8 +28,6 @@ void SceneGame::Init()
 	gModelManager["ground1"] = loader.Load(
 		"assets/ground1.obj", L"assets/ground1.jpg"
 	);
-
-
 
 	// ’eƒ‚ƒfƒ‹“Ç‚Ýž‚Ý
 	loader = ObjModelLoader();
@@ -262,7 +258,9 @@ void SceneGame::Update()
 
 //	vector_UpdateAll(gObjectList);
 
-	for (auto e : gObjectList)
+	//for(auto e = gObjectList.begin();)
+
+	for (const auto& e : gObjectList)
 	{
 		e->Update();
 	}
